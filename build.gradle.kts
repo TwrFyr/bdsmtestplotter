@@ -19,6 +19,7 @@ repositories {
 dependencies {
     testImplementation(kotlin("test"))
     implementation(compose.desktop.currentOs)
+    implementation("net.sourceforge.htmlunit:htmlunit:2.60.0")
 }
 
 tasks.test {
