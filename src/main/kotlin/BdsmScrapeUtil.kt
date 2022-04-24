@@ -18,16 +18,18 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 object BdsmScrapeUtil {
+    private const val AUTH_SIGNATURE = "814a69afc15258000678f00526b0c107ac271b5ea997beb4f7c1e81c861c972b"
     private val SCORE_REGEX = Regex("""(-?\d+)% ([a-zA-Z /\-()]+) """)
     private val webClient = buildWebClient()
+    private val parser: Parser = Parser.default()
 
     /**
      * Scrapes the website for the results of a test.
      * @return the text version of the results with the given result id
      */
-    fun getParsedResults(id: String, jsWaitingDuration: Long = 2000L): Result {
+    fun getParsedResults(resultId: String, jsWaitingDuration: Long = 2000L): Result {
         webClient.use {
-            val url = "https://bdsmtest.org/r/$id"
+            val url = "https://bdsmtest.org/r/$resultId"
             val page = webClient.getPage<HtmlPage>(url)
             webClient.waitForBackgroundJavaScript(jsWaitingDuration)
 
@@ -35,11 +37,63 @@ object BdsmScrapeUtil {
             val resultDate = page.getHtmlElementById<HtmlSpan>("resultdate")
 
             return Result(
-                id = id,
+                resultId = resultId,
                 date = LocalDate.parse(resultDate.asNormalizedText(), DateTimeFormatter.ISO_DATE),
                 kinkMap = parseResultText(resultTextArea.text)
             )
         }
+    }
+
+    /**
+     * Scrapes the website for the results of a test.
+     * @return the parsed result with the given id
+     */
+    fun getParsedResults(resultId: String): Result = runBlocking {
+        val client = HttpClient(CIO)
+        val resultResponse: HttpResponse = client.submitForm(
+            url = "https://bdsmtest.org/ajax/getresult",
+            formParameters = Parameters.build {
+                append("uauth[uid]", "0")
+                append("uauth[salt]", "")
+                append("uauth[authsig]", AUTH_SIGNATURE)
+                append("rauth[rid]", resultId)
+            }
+        )
+        assert(resultResponse.status == HttpStatusCode.OK)
+        client.close()
+
+        return@runBlocking Result(
+            resultId = resultId,
+            date = parseDate(resultResponse.bodyAsText()),
+            kinkMap = parseResults(resultResponse.bodyAsText()),
+        )
+    }
+
+    /**
+     * Parses the kink scores from the result json.
+     */
+    private fun parseResults(json: String): Map<Kink, Int> {
+        val jsonErrorText = "malformed JSON (result score)"
+        val resultsJson = parser.parse(StringBuilder(json)) as JsonObject
+        val scores = resultsJson.array<JsonObject>("scores") ?: throw IllegalArgumentException(jsonErrorText)
+
+        val resultMap = mutableMapOf<Kink, Int>()
+        scores.forEach {
+            val name = it.string("name") ?: throw IllegalArgumentException(jsonErrorText)
+            val score = it.int("score") ?: throw IllegalArgumentException(jsonErrorText)
+            resultMap[KinkRepository.getKinkByName(name)] = score
+        }
+        return resultMap
+    }
+
+    /**
+     * Parses the date of the test from the result json.
+     */
+    private fun parseDate(json: String): LocalDate {
+        val jsonErrorText = "malformed JSON (result date)"
+        val resultsJson = parser.parse(StringBuilder(json)) as JsonObject
+        val dateString = resultsJson.string("date") ?: throw IllegalArgumentException(jsonErrorText)
+        return LocalDate.parse(dateString, DateTimeFormatter.ISO_DATE)
     }
 
     /**
@@ -112,6 +166,6 @@ object BdsmScrapeUtil {
 }
 
 fun main() {
-    println(BdsmScrapeUtil.getParsedResults(id = "3382364"))
-    println(BdsmScrapeUtil.getResultIdsForUser("<email>", "<password>"))
+    println(BdsmScrapeUtil.getParsedResults(resultId = "3382364"))
+//    println(BdsmScrapeUtil.getResultIdsForUser("<email>", "<password>"))
 }
