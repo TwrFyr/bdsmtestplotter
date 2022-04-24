@@ -17,7 +17,7 @@ import kotlinx.coroutines.runBlocking
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-object BdsmScrapeUtil {
+object BdsmScraperImpl: BdsmScraper {
     private const val AUTH_SIGNATURE = "814a69afc15258000678f00526b0c107ac271b5ea997beb4f7c1e81c861c972b"
     private val SCORE_REGEX = Regex("""(-?\d+)% ([a-zA-Z /\-()]+) """)
     private val webClient = buildWebClient()
@@ -44,11 +44,7 @@ object BdsmScrapeUtil {
         }
     }
 
-    /**
-     * Scrapes the website for the results of a test.
-     * @return the parsed result with the given id
-     */
-    fun getParsedResults(resultId: String): Result = runBlocking {
+    override fun getParsedResults(resultId: String): Result = runBlocking {
         val client = HttpClient(CIO)
         val resultResponse: HttpResponse = client.submitForm(
             url = "https://bdsmtest.org/ajax/getresult",
@@ -96,11 +92,7 @@ object BdsmScrapeUtil {
         return LocalDate.parse(dateString, DateTimeFormatter.ISO_DATE)
     }
 
-    /**
-     * Scrapes the website for the all result ids associated with an account.
-     * @returns a list of ids of all results of an account
-     */
-    fun getResultIdsForUser(email: String, password: String): List<String> = runBlocking {
+    override fun getResultIdsForUser(email: String, password: String): List<String> = runBlocking {
         val client = HttpClient(CIO)
         val loginResponse: HttpResponse = client.submitForm(
             url = "https://bdsmtest.org/ajax/login",
@@ -166,6 +158,7 @@ object BdsmScrapeUtil {
 }
 
 fun main() {
-    println(BdsmScrapeUtil.getParsedResults(resultId = "3382364"))
-//    println(BdsmScrapeUtil.getResultIdsForUser("<email>", "<password>"))
+    val bdsmScraper: BdsmScraper = BdsmScraperImpl
+    println(bdsmScraper.getParsedResults(resultId = "3382364"))
+//    println(bdsmScraper.getResultIdsForUser("<email>", "<password>"))
 }
