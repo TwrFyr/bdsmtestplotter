@@ -1,3 +1,5 @@
+package kink
+
 /**
  * Used for loading and managing all kinks. Meant to reduce the number of [Kink] instances.
  */

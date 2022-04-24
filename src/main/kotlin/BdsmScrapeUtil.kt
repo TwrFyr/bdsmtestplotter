@@ -4,6 +4,8 @@ import com.gargoylesoftware.htmlunit.WebClient
 import com.gargoylesoftware.htmlunit.html.HtmlPage
 import com.gargoylesoftware.htmlunit.html.HtmlSpan
 import com.gargoylesoftware.htmlunit.html.HtmlTextArea
+import kink.Kink
+import kink.KinkRepository
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
