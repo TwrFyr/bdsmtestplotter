@@ -17,11 +17,17 @@ repositories {
     maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
 }
 
+val ktor_version: String by project
+
 dependencies {
     testImplementation(kotlin("test"))
+
     implementation(compose.desktop.currentOs)
     implementation("net.sourceforge.htmlunit:htmlunit:2.60.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
+    implementation("io.ktor:ktor-client-core:$ktor_version")
+    implementation("io.ktor:ktor-client-cio:$ktor_version")
+    implementation("com.beust:klaxon:5.5")
 }
 
 tasks.test {
