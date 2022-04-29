@@ -1,13 +1,13 @@
 package scraping
 
-import model.Result
+import model.TestResult
 
 interface BdsmScraper {
     /**
      * Scrapes the website for the results of a test.
      * @return the parsed result with the given id
      */
-    fun getParsedResults(resultId: String): Result
+    fun getParsedResults(resultId: String): TestResult
 
     /**
      * Scrapes the website for the all result ids associated with an account.

@@ -8,17 +8,11 @@ import model.Kink
  * Used for loading and managing all kinks. Meant to reduce the number of [Kink] instances.
  */
 object KinkRepository {
-    private val kinkMap: MutableMap<String, Kink> = mutableMapOf()
+    private val kinks: List<Kink> = loadKinksFromResource()
 
-    init {
-        loadKinksFromResource().forEach { kink ->
-            kinkMap[kink.name] = kink
-        }
-    }
+    fun getKinkById(id: Long): Kink = kinks.first { it.id == id }
 
-    fun getKinkByName(name: String): Kink {
-        return kinkMap[name] ?: throw IllegalArgumentException("No kink with name '$name'.")
-    }
+    fun getKinkByName(name: String): Kink = kinks.first { it.name == name }
 
     private fun loadKinksFromResource(): List<Kink> {
         val json: String = this.javaClass.getResource("/kinks.json")?.readText() ?: ""

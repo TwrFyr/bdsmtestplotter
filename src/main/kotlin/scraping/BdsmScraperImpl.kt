@@ -15,8 +15,9 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
 import model.Kink
-import model.Result
+import model.TestResult
 import persistence.KinkRepository
+import persistence.ResultRepository
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -30,7 +31,7 @@ object BdsmScraperImpl : BdsmScraper {
      * Scrapes the website for the results of a test.
      * @return the text version of the results with the given result id
      */
-    fun getParsedResults(resultId: String, jsWaitingDuration: Long = 2000L): Result {
+    fun getParsedResults(resultId: String, jsWaitingDuration: Long = 2000L): TestResult {
         webClient.use {
             val url = "https://bdsmtest.org/r/$resultId"
             val page = webClient.getPage<HtmlPage>(url)
@@ -39,7 +40,7 @@ object BdsmScraperImpl : BdsmScraper {
             val resultTextArea = page.getHtmlElementById<HtmlTextArea>("copypastearea")
             val resultDate = page.getHtmlElementById<HtmlSpan>("resultdate")
 
-            return Result(
+            return TestResult(
                 resultId = resultId,
                 date = LocalDate.parse(resultDate.asNormalizedText(), DateTimeFormatter.ISO_DATE),
                 kinkMap = parseResultText(resultTextArea.text)
@@ -47,7 +48,7 @@ object BdsmScraperImpl : BdsmScraper {
         }
     }
 
-    override fun getParsedResults(resultId: String): Result = runBlocking {
+    override fun getParsedResults(resultId: String): TestResult = runBlocking {
         val client = HttpClient(CIO)
         val resultResponse: HttpResponse = client.submitForm(
             url = "https://bdsmtest.org/ajax/getresult",
@@ -61,7 +62,7 @@ object BdsmScraperImpl : BdsmScraper {
         assert(resultResponse.status == HttpStatusCode.OK)
         client.close()
 
-        return@runBlocking Result(
+        return@runBlocking TestResult(
             resultId = resultId,
             date = parseDate(resultResponse.bodyAsText()),
             kinkMap = parseResults(resultResponse.bodyAsText()),
@@ -162,6 +163,11 @@ object BdsmScraperImpl : BdsmScraper {
 
 fun main() {
     val bdsmScraper: BdsmScraper = BdsmScraperImpl
-    println(bdsmScraper.getParsedResults(resultId = "3382364"))
-//    println(bdsmScraper.getResultIdsForUser("<email>", "<password>"))
+    val resultIds = bdsmScraper.getResultIdsForUser("<email>", "<password>")
+    ResultRepository.addAll(
+        resultIds.map {
+            bdsmScraper.getParsedResults(it)
+        })
+    val results = ResultRepository.getAllResults()
+    print(results)
 }
