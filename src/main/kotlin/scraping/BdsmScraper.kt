@@ -1,3 +1,6 @@
+package scraping
+
+import model.Result
 
 interface BdsmScraper {
     /**

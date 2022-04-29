@@ -1,3 +1,5 @@
+package scraping
+
 import com.beust.klaxon.JsonObject
 import com.beust.klaxon.Parser
 import com.gargoylesoftware.htmlunit.BrowserVersion
@@ -11,13 +13,14 @@ import io.ktor.client.engine.cio.*
 import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import kink.Kink
-import kink.KinkRepository
 import kotlinx.coroutines.runBlocking
+import model.Kink
+import model.Result
+import persistence.KinkRepository
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-object BdsmScraperImpl: BdsmScraper {
+object BdsmScraperImpl : BdsmScraper {
     private const val AUTH_SIGNATURE = "814a69afc15258000678f00526b0c107ac271b5ea997beb4f7c1e81c861c972b"
     private val SCORE_REGEX = Regex("""(-?\d+)% ([a-zA-Z /\-()]+) """)
     private val webClient = buildWebClient()

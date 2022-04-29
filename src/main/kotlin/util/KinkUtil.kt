@@ -3,6 +3,7 @@ package kink
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import model.Kink
 import java.io.File
 
 private fun main() {
@@ -17,10 +18,4 @@ private fun sortKinksJsonById() {
     val kinks = Json.decodeFromString<List<Kink>>(jsonString)
     val sortedString = Json.encodeToString(kinks.sortedBy { it.id })
     File("kinks.json").writeText(sortedString)
-}
-
-fun loadKinks(): List<Kink> {
-    val json: String = object {}.javaClass.getResource("/kinks.json")?.readText() ?: ""
-    assert(json.isNotBlank())
-    return Json.decodeFromString(json)
 }

@@ -1,3 +1,5 @@
+package scraping
+
 /**
  * Class containing all data necessary for user authentication.
  */

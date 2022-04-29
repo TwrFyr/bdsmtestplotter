@@ -1,4 +1,4 @@
-package kink
+package model
 
 /**
  * Class representing a specific kink from `bsdmtest.org`.

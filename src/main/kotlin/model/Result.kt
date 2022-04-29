@@ -1,4 +1,5 @@
-import kink.Kink
+package model
+
 import java.time.LocalDate
 
 /**
